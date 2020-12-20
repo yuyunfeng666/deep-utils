@@ -18,3 +18,39 @@ for i in range(2000):
 
 # print([p for p in model.parameters()])
 print(model.decode(emissions))
+
+#--------------遮罩使用------------------------
+from crf_layer import CRF
+import torch
+from tensorboardX import SummaryWriter
+from torch.optim import lr_scheduler
+writer = SummaryWriter('runs/scalar_example5')
+# for i in range(10):
+#     writer.add_scalar('quadratic', i**2, global_step=i)
+#     writer.add_scalar('exponential', 2**i, global_step=i)
+
+batch_size, seq_length,  num_tags = 2, 3, 5
+emissions = torch.randn( batch_size, seq_length, num_tags, requires_grad=True)
+print(emissions)
+tags = torch.LongTensor([[0, 1, 2], [3, 4, 4]])  # ( batch_size,seq_length,)
+model = CRF(num_tags,batch_first=True)
+mask = torch.ByteTensor([[1,1,0],[1,0,0]])
+optim = torch.optim.Adam(model.parameters(),lr=1e-3)
+# scheduler = lr_scheduler.ExponentialLR(optim, gamma=0.9)
+# scheduler = lr_scheduler.StepLR(optim, step_size=9000, gamma=0.1)
+# print(list(model.parameters())[0].grad)
+for i in range(10000):
+    loss = -model(emissions, tags, mask=mask)
+
+    # lr = scheduler.get_last_lr()
+    # writer.add_scalar('loss',loss,global_step=i)
+    # writer.add_scalar('lr', lr, global_step=i)
+    # writer.add_histogram('grad', list(model.parameters())[0].detach().numpy(), global_step=i)
+    print(loss)
+    optim.zero_grad()
+    loss.backward()
+    optim.step()
+    # scheduler.step()
+
+# print([p for p in model.parameters()])
+print(model.decode(emissions,mask=mask))
