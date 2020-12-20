@@ -1,0 +1,20 @@
+from crf_layer import CRF
+import torch
+
+batch_size, seq_length,  num_tags = 2, 3, 5
+emissions = torch.randn( batch_size, seq_length, num_tags, requires_grad=True)
+print(emissions)
+tags = torch.LongTensor([[0, 1, 2], [3, 4, 4]])  # ( batch_size,seq_length,)
+model = CRF(num_tags,batch_first=True)
+
+optim = torch.optim.Adam(model.parameters())
+for i in range(2000):
+    loss = -model(emissions, tags)
+    print(loss)
+    optim.zero_grad()
+    loss.backward()
+    optim.step()
+
+
+# print([p for p in model.parameters()])
+print(model.decode(emissions))
